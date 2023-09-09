@@ -14,6 +14,8 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 
+#define DEBUG
+
 const char PROC_FILENAME[] = "partb_1_20CS30062_20CS30057";
 
 // for functions like creating a deque/ allocating memory
@@ -120,14 +122,17 @@ static int insert_proc_node( pid_t pid )
 static void delete_proc( struct proc_node * proc )
 {
 	// delete the deque in proc
-	struct deq_element * temp = proc->deque->front;
-	while ( temp != NULL )
+	if ( proc->deque )
 	{
-		struct deq_element * temp2 = temp;
-		temp = temp->next;
-		kfree( temp2 );
+		struct deq_element * temp = proc->deque->front;
+		while ( temp != NULL )
+		{
+			struct deq_element * temp2 = temp;
+			temp = temp->next;
+			kfree( temp2 );
+		}
+		kfree( proc->deque );
 	}
-	kfree( proc->deque );
 	kfree( proc );
 }
 
@@ -147,16 +152,17 @@ static void delete_proc_from_list( struct proc_node * proc )
 		}
 		temp->next = proc->next;
 	}
-	delete_proc( temp );
+	delete_proc( proc );
 }
 
 static void print_deq( struct deque * deq )
 {
 #ifdef DEBUG
 	struct deq_element * temp = deq->front;
+	pr_info( "Deque: " );
 	while ( temp != NULL )
 	{
-		pr_info( "%d " , temp->data );
+		pr_cont( "%d " , temp->data );
 		temp = temp->next;
 	}
 	pr_info( "\n" );
@@ -167,6 +173,7 @@ static int my_open( struct inode * inode , struct file * file )
 {
 	pid_t pid;
 	int ret;
+	mutex_lock( &file_mutex );
 	pid = current->pid;
 	struct proc_node * cur;
 	if ( pid < 0 )
@@ -176,44 +183,30 @@ static int my_open( struct inode * inode , struct file * file )
 	}
 	else
 	{
-		// stores the the node belonging to proc who is using file
+		pr_info( "proc_open() invoked by Process pid %d\n" , pid );
+		// check if pid already in list
 		cur = find_proc_node( pid );
-		// need this since return can only be called after unlocking mutex at last
-		mutex_lock( &file_mutex );
-		// Open logic
-		pid = current->pid;
-		// check if pid valid
-		if ( pid < 0 )
+		if ( cur != NULL )
 		{
-			pr_err( "Invalid pid\n" );
-			ret = -EINVAL;
+			pr_err( "Process pid %d already has this file open\n" , pid );
+			ret = -EACCES;
 		}
 		else
 		{
-			pr_info( "proc_open() invoked by Process pid %d\n" , pid );
-			// check if pid already in list
-			cur = find_proc_node( pid );
-			if ( cur != NULL )
+			// insert proc node
+			if ( insert_proc_node( pid ) == FAILURE )
 			{
-				pr_err( "Process pid %d already has this file open\n" , pid );
-				ret = -EACCES;
+				pr_err( "Failed to open file\n" );
+				ret = -ENOMEM;
 			}
 			else
 			{
-				// insert proc node
-				if ( insert_proc_node( pid ) == FAILURE )
-				{
-					pr_err( "Failed to open file\n" );
-					ret = -ENOMEM;
-				}
-				else
-				{
-					pr_info( "Process pid %d successfully opened the file" , pid );
-					ret = 0;
-				}
+				pr_info( "Process pid %d successfully opened the file" , pid );
+				ret = 0;
 			}
 		}
 	}
+
 	mutex_unlock( &file_mutex );
 	return ret;
 }
@@ -283,6 +276,8 @@ static ssize_t helper_write( struct proc_node * cur )
 			cur->deque->rear = new_element;
 		}
 		cur->deque->size++;
+		pr_info( "Process pid %d wrote %d to deque\n" , cur->pid , data );
+
 		return 4;
 	}
 	return -EINVAL;
@@ -371,6 +366,8 @@ static int helper_read( struct proc_node * cur )
 
 	// copy this data to ker_buf
 	strncpy( ker_buf , ( const char * ) &data , ker_buf_size );
+	pr_info( "Process pid %d read %d from deque\n" , cur->pid , data );
+
 	delete_from_front( cur->deque );
 	return ker_buf_size;
 }
@@ -413,10 +410,6 @@ static ssize_t my_read( struct file * file , char __user * user_buffer ,
 				{
 					pr_err( "Error: copy_to_user failed\n" );
 					ret = -EFAULT;
-				}
-				else
-				{
-					pr_info( "Process pid %d successfully read from the file\n" , pid );
 				}
 			}
 		}

@@ -20,7 +20,7 @@ int main()
 		exit( 1 );
 	}
 
-	char ch = ( char ) 50;
+	char ch = ( char ) 5;
 
 	int ret = write( fd , &ch , 1 );
 
@@ -33,7 +33,7 @@ int main()
 
 	srand( 42 );
 
-	int n = 20;
+	int n = ch + 5;
 
 	int * arr = ( int * ) malloc( n * sizeof( int ) );
 	int last = 0;
@@ -46,8 +46,6 @@ int main()
 		if ( ret < 0 )
 		{
 			perror( "write" );
-			close( fd );
-			exit( 1 );
 		}
 
 		if ( num % 2 == 1 ) // if odd insert left in arr
@@ -82,8 +80,6 @@ int main()
 		if ( ret < 0 )
 		{
 			perror( "read" );
-			close( fd );
-			exit( 1 );
 		}
 		printf( "Read %d\n" , num );
 	}
