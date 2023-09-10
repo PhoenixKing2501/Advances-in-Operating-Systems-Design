@@ -14,7 +14,13 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 
-#define DEBUG
+/*LOCKING CRITERIA
+	A global lock used instead of a per process lock
+	Using a global lock eased the coding part, and there was no significant difference in the scheduling of 2 different processes, as seen during execution.
+	There was a good mixing of read, write and open calls of different processes
+	Also, the lock is held for a very short time, so it does not affect the performance much
+*/
+
 
 const char PROC_FILENAME[] = "partb_1_20CS30062_20CS30057";
 
@@ -111,7 +117,7 @@ static int insert_proc_node( pid_t pid )
 	}
 	new_proc->pid = pid;
 	new_proc->state = PROC_FOPEN;
-	// modify list
+	// modify list and insert proc at beginning of list
 	new_proc->next = proc_list;
 	proc_list = new_proc;
 	// the deque is NULL until this proc starts writing to the file
@@ -122,6 +128,7 @@ static int insert_proc_node( pid_t pid )
 static void delete_proc( struct proc_node * proc )
 {
 	// delete the deque in proc
+	// if deque not initialised, can happen if file opened but nothing written to it, nothing to free
 	if ( proc->deque )
 	{
 		struct deq_element * temp = proc->deque->front;
@@ -155,6 +162,7 @@ static void delete_proc_from_list( struct proc_node * proc )
 	delete_proc( proc );
 }
 
+// debug function to print deque at any instant
 static void print_deq( struct deque * deq )
 {
 #ifdef DEBUG
@@ -397,6 +405,7 @@ static ssize_t my_read( struct file * file , char __user * user_buffer ,
 		}
 		else
 		{
+			// find bytes to read limited by max bytes that can be read in a single call
 			ker_buf_size = min( count , ( ssize_t ) MAX_READ_SIZE );
 			ret = helper_read( cur );
 
@@ -445,7 +454,7 @@ static int my_release( struct inode * inode , struct file * file )
 		}
 		else
 		{
-			// delete proc node
+			// delete proc node from list
 			delete_proc_from_list( cur );
 			pr_info( "Process pid %d successfully closed the file\n" , pid );
 			ret = 0;

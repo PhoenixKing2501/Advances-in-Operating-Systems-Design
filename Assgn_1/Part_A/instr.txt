@@ -1,0 +1,62 @@
+main tut to follow : "https://davidaugustat.com/linux/how-to-compile-linux-kernel-on-ubuntu"
+
+sudo apt install build-essential libncurses-dev bison flex libssl-dev libelf-dev fakeroot dwarves zstd
+
+cd <kernel_dir>
+
+cp -v /boot/config-$(uname -r) .config
+
+(DON'T DO THIS!!) yes $'\n' | make localmodconfig # needs change due to assignments
+
+(DO THIS INSTEAD!!) make menuconfig
+
+scripts/config --disable SYSTEM_TRUSTED_KEYS
+scripts/config --disable SYSTEM_REVOCATION_KEYS
+scripts/config --set-str CONFIG_SYSTEM_TRUSTED_KEYS ""
+scripts/config --set-str CONFIG_SYSTEM_REVOCATION_KEYS ""
+
+fakeroot make -j <output of "echo $(($(nproc) + 2))">
+
+echo $?  # just to check
+
+sudo make modules_install
+
+sudo make install
+
+shutdown -r now
+
+To Display GRUB : 
+
+https://askubuntu.com/questions/16042/how-to-get-to-the-grub-menu-at-boot-time/16049
+
+https://askubuntu.com/a/1182434
+
+
+Change swap space (do all as root):
+
+free -h
+
+swapoff /swapfile
+
+fallocate -l 8G /swapfile
+
+mkswap /swapfile
+
+chmod 600 /swapfile
+
+swapon /swapfile
+
+free -h
+
+
+
+
+
+
+
+
+
+
+
+
+

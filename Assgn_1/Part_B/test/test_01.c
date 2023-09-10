@@ -1,12 +1,15 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
+
+/*checks normal read write calls exceeding capacity*/
 #define PROC_FILENAME "partb_1_20CS30062_20CS30057"
 
 int main()
@@ -16,11 +19,10 @@ int main()
 	if ( fd < 0 )
 	{
 		perror( "open" );
-		close( fd );
 		exit( 1 );
 	}
 
-	char ch = ( char ) 5;
+	char ch = ( char ) 10;
 
 	int ret = write( fd , &ch , 1 );
 
@@ -48,30 +50,34 @@ int main()
 			perror( "write" );
 		}
 
-		if ( num % 2 == 1 ) // if odd insert left in arr
+		else
 		{
-			for ( size_t j = last; j > 0; --j )
+			if ( num % 2 == 1 ) // if odd insert left in arr
 			{
-				arr[ j ] = arr[ j - 1 ];
+				for ( size_t j = last; j > 0; --j )
+				{
+					arr[ j ] = arr[ j - 1 ];
+				}
+
+				arr[ 0 ] = num;
+
+				++last;
 			}
-
-			arr[ 0 ] = num;
-
-			++last;
+			else // if even insert right in arr
+			{
+				arr[ last++ ] = num;
+			}
 		}
-		else // if even insert right in arr
-		{
-			arr[ last++ ] = num;
-		}
-
 		// sleep( 1 );
 	}
 
-	for ( size_t i = 0; i < n; ++i )
+	for ( size_t i = 0; i < last; ++i )
 	{
 		printf( "%d " , arr[ i ] );
 	}
 	printf( "\n" );
+
+	free( arr );
 
 	for ( size_t i = 0; i < n; ++i )
 	{
@@ -81,7 +87,8 @@ int main()
 		{
 			perror( "read" );
 		}
-		printf( "Read %d\n" , num );
+		else
+			printf( "Read %d\n" , num );
 	}
 
 	close( fd );
