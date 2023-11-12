@@ -1,0 +1,16 @@
+FROM ubuntu:20.04
+
+RUN apt-get update
+RUN apt-get install -y clang llvm libelf-dev libpcap-dev build-essential make
+RUN apt-get install -y linux-tools-common gcc-multilib linux-tools-generic libpf-dev
+RUN apt-get install -y net-tools
+RUN apt-get install linux-cloud-tools-common -y
+RUN apt-get install linux-cloud-tools-5.15.0-88 -y
+RUN apt-get install linux-cloud-tools-5.15.0-88-generic -y
+RUN apt-get install linux-tools-5.15.0-88-generic -y
+
+COPY server.c /src/server.c
+COPY filter /src/filter
+WORKDIR /src
+
+# RUN gcc -o server server.c -pthread
