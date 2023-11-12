@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                // "/usr/include",
+                // "/usr/local/include",
+                "/usr/lib/gcc/x86_64-linux-gnu/9/include",
+                "/home/utsav/Downloads/linux-5.10.191/include/**",
+                "/home/utsav/Downloads/linux-5.10.191/arch/x86/include/**"
+            ],
+            "defines": [
+                // "__KERNEL__",
+                // "MODULE"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "gnu17",
+            "compilerArgs": [
+                "-nostdinc"
+            ]
+        }
+    ],
+    "version": 4
+}
