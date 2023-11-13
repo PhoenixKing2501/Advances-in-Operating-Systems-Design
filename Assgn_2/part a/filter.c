@@ -18,7 +18,6 @@ int xdp_drop_even_parity(struct xdp_md *ctx)
     void *data = (void *)(long)ctx->data;
     void *data_end = (void *)(long)ctx->data_end;
 
-
     // To check if the packet contains numeric data to drop from client
     if (data + len > data_end)
         return XDP_PASS;
@@ -44,7 +43,7 @@ int xdp_drop_even_parity(struct xdp_md *ctx)
             {
 
                 int *data_int = (int *)(udp + 1);
-                int num = htons(*data_int);
+                int num = ntohl(*data_int);
                 bpf_printk("Data sent by client: %d\n", num);
 
                 // Check if the data has even parity
