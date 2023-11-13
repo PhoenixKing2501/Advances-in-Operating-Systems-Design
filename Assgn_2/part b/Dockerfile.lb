@@ -11,9 +11,8 @@ RUN apt install -y linux-tools-5.15.0-88-generic
 RUN apt install -y nano
 RUN apt install -y iproute2
 
-COPY server.c /src/server.c
-COPY filter /src/filter
+COPY lb.c /src/lb.c
+COPY lb.bpf.c /src/lb.bpf.c
+COPY lb.bpf.h /src/lb.bpf.h
 COPY Makefile /src/Makefile
 WORKDIR /src
-
-# RUN gcc -o server server.c -pthread

@@ -4,12 +4,12 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define SERVER_IP "127.0.0.1" // Replace with the actual server IP
+// #define SERVER_IP "127.0.0.1" // Replace with the actual server IP
 #define SERVER_PORT 12000     // Replace with the actual server port
 #define DATA_SIZE sizeof(int)
 #define PAUSE_INTERVAL 5
 
-int main()
+int main(int argc, char* argv[])
 {
     int client_socket;
     struct sockaddr_in server_addr;
@@ -21,10 +21,12 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    char *server_ip = argv[1];
+
     // Fill in server details
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
-    if (inet_aton(SERVER_IP, &server_addr.sin_addr) == 0)
+    if (inet_aton(server_ip, &server_addr.sin_addr) == 0)
     {
         perror("Invalid server IP");
         close(client_socket);
@@ -38,8 +40,11 @@ int main()
     {
         // send data bytes as the numeric data to send
 
+        int data = htonl(data_count);
+
+
         // Send data to server
-        if (sendto(client_socket, &data_count, DATA_SIZE, 0,
+        if (sendto(client_socket, &data, DATA_SIZE, 0,
                    (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
         {
             perror("Send failed");
