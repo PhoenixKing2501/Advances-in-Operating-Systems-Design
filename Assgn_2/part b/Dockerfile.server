@@ -1,0 +1,11 @@
+FROM gcc
+
+RUN apt update 
+RUN apt install -y nano
+
+ENV IP=127.0.0.1
+
+COPY client.c /src/client.c
+WORKDIR /src
+
+RUN gcc -o client client.c

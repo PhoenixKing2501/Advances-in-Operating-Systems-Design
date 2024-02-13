@@ -1,0 +1,10 @@
+FROM gcc
+
+ENV IP=127.0.0.1
+
+COPY client.c /src/client.c
+WORKDIR /src
+
+# RUN gcc -o client client.c
+
+# CMD ["./client", "$IP"]
